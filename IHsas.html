@@ -1,1 +1,1348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IHSAs Students Union Portal</title>
+    
+    <!-- Tailwind CSS Engine -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        richblack: '#00072d',      /* Deep background primary */
+                        darknavy: '#051650',       /* Card backgrounds */
+                        bangladesh: '#0a2472',     /* Borders, secondary accents */
+                        caribbean: '#123499',      /* Bright brand accent blue */
+                        brandwhite: '#e5eaf7',     /* Clear white/lavender text */
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #00072d;
+            font-family: 'Inter', sans-serif;
+            color: #e5eaf7;
+            overflow-x: hidden;
+        }
+
+        /* Custom Scrollbar styled for cosmic blue aesthetic */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #00072d;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #0a2472;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #123499;
+        }
+
+        /* Ambient glowing highlights */
+        .cosmic-glow {
+            box-shadow: 0 0 25px -5px rgba(18, 52, 153, 0.4);
+        }
+        .text-glow {
+            text-shadow: 0 0 10px rgba(229, 234, 247, 0.3);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-caribbean selection:text-white">
+
+    <header class="bg-richblack/90 backdrop-blur-md border-b border-bangladesh/50 sticky top-0 z-40 px-4 py-3 sm:px-6">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <button onclick="toggleMobileSidebar()" class="lg:hidden text-brandwhite hover:text-white focus:outline-none text-xl p-1">
+                    <i class="fa-solid fa-bars-staggered"></i>
+                </button>
+                <div class="flex items-center space-x-2">
+                    <div>
+                        <span class="text-lg font-black tracking-wider text-white uppercase block leading-none">IHSAs</span>
+                        <span class="text-[9px] uppercase tracking-widest text-brandwhite/60 block mt-0.5">Students Union Portal</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dynamic Session Indicator / Admin Actions -->
+            <div class="flex items-center space-x-3">
+                <div id="adminIndicator" class="hidden items-center space-x-2 bg-rose-500/10 border border-rose-500/30 px-3 py-1.5 rounded-xl">
+                    <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+                    <span class="text-[10px] font-black text-rose-400 uppercase tracking-widest">Master Admin Active</span>
+                </div>
+
+                <div id="classIndicator" class="hidden items-center space-x-2 bg-emerald-500/10 border border-emerald-500/30 px-3 py-1.5 rounded-xl">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span id="classIndicatorText" class="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Chamber Session</span>
+                </div>
+
+                <!-- Trigger Buttons -->
+                <button id="addProgramBtn" onclick="toggleProgramModal(true)" class="hidden bg-caribbean hover:bg-caribbean/80 text-white text-xs font-black uppercase tracking-wider px-4 py-2 rounded-xl transition duration-150 items-center space-x-1.5 shadow-md shadow-caribbean/20">
+                    <i class="fa-solid fa-plus text-[10px]"></i>
+                    <span>Log Event Report</span>
+                </button>
+
+                <button id="masterAdminLoginBtn" onclick="toggleAdminModal(true)" class="bg-darknavy hover:bg-bangladesh text-brandwhite hover:text-white text-xs font-black uppercase tracking-wider px-4 py-2 rounded-xl border border-bangladesh/60 transition duration-150">
+                    IHSAs Login
+                </button>
+
+                <button id="masterLogoutBtn" onclick="terminateMasterSession()" class="hidden bg-rose-950/50 hover:bg-rose-900/60 text-rose-200 text-xs font-black uppercase tracking-wider px-4 py-2 rounded-xl border border-rose-500/30 transition duration-150">
+                    Logout
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto flex flex-col lg:flex-row p-4 sm:p-6 gap-6">
+
+        <!-- Desktop Sidebar (Left Column) -->
+        <aside class="hidden lg:block w-72 shrink-0">
+            <div class="bg-darknavy/50 border border-bangladesh/50 rounded-2xl p-4 sticky top-24 space-y-5">
+                <div>
+                    <h3 class="text-xs font-extrabold uppercase tracking-widest text-brandwhite/40 mb-2">Navigation Centre</h3>
+                    <p class="text-[11px] text-brandwhite/60 leading-relaxed">
+                        Toggle between general union activities and individual class chambers.
+                    </p>
+                </div>
+
+                <!-- Unified Sidebar Buttons Stack -->
+                <div class="space-y-2" id="classUnionSidebarList">
+                    <!-- Dynamic class and view options rendered here by Javascript -->
+                </div>
+
+                <!-- Sidebar Status HUD -->
+                <div id="sessionStatusWidget" class="hidden bg-richblack/60 p-4 rounded-xl border border-bangladesh/50 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-bold text-brandwhite/50 uppercase tracking-wider">Active User</span>
+                        <span id="activeSessionName" class="text-xs font-extrabold text-white uppercase">None</span>
+                    </div>
+                    <button onclick="terminateChamberSession()" class="w-full bg-rose-950/40 hover:bg-rose-900/60 text-rose-200 text-[10px] font-black uppercase tracking-widest py-2 rounded-lg border border-rose-500/20 transition">
+                        Logout Session
+                    </button>
+                </div>
+
+                <div class="pt-2 border-t border-bangladesh/30">
+                    <button id="resetDbBtn" onclick="triggerResetDatabaseConfirm()" class="hidden w-full text-left text-[10px] text-rose-400 hover:text-rose-300 transition uppercase tracking-widest font-black">
+                        <i class="fa-solid fa-trash-can mr-1.5"></i> Clear DB Modifications
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <section class="flex-1 space-y-6">
+            
+            <!-- Hero banner and active Stats panel -->
+            <div class="bg-gradient-to-br from-darknavy to-richblack border border-bangladesh rounded-3xl p-6 sm:p-8 flex flex-col lg:flex-row items-center justify-between gap-6 relative overflow-hidden cosmic-glow">
+                <div class="absolute -right-16 -top-16 w-64 h-64 bg-caribbean/10 rounded-full blur-3xl pointer-events-none"></div>
+                
+                <div class="space-y-3 z-10 text-center lg:text-left">
+                    <span class="bg-caribbean/30 text-white text-[10px] font-extrabold uppercase tracking-widest px-3 py-1 rounded-full border border-caribbean/50">Official Registry Portal</span>
+                    <h1 class="text-3xl sm:text-4xl font-black text-white tracking-tight uppercase leading-none text-glow">IHSAs Students Union</h1>
+                    <p class="text-brandwhite/80 text-sm max-w-lg leading-relaxed">
+                        A role-based secure directory recording programs, achievements, and structural activities for all classes.
+                    </p>
+                </div>
+
+                <!-- Stats Grid matching visual brand elements -->
+                <div class="grid grid-cols-2 gap-4 sm:gap-6 w-full lg:w-auto min-w-[320px]">
+                    <div class="bg-richblack/60 p-6 rounded-2xl border border-caribbean/30 flex flex-col justify-between hover:border-caribbean/60 transition duration-300">
+                        <span class="text-brandwhite/70 text-xs font-bold uppercase tracking-widest">Active Students</span>
+                        <div class="mt-4 flex items-baseline space-x-2">
+                            <span class="text-4xl font-extrabold text-white">269</span>
+                            <span class="text-caribbean text-sm"><i class="fa-solid fa-users"></i></span>
+                        </div>
+                    </div>
+                    <div class="bg-richblack/60 p-6 rounded-2xl border border-caribbean/30 flex flex-col justify-between hover:border-caribbean/60 transition duration-300">
+                        <span class="text-brandwhite/70 text-xs font-bold uppercase tracking-widest font-sans">Total Events</span>
+                        <div class="mt-4 flex items-baseline space-x-2">
+                            <span class="text-4xl font-extrabold text-white" id="totalEventsStat">1</span>
+                            <span class="text-caribbean text-sm"><i class="fa-solid fa-trophy-star"></i></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STANDARD PROGRAM VIEW SCREEN -->
+            <div id="programsViewContainer" class="space-y-6">
+                <!-- Search and category filters row -->
+                <div class="bg-darknavy/30 border border-bangladesh/50 p-4 rounded-2xl flex flex-col md:flex-row gap-4 items-center justify-between">
+                    <div class="relative w-full md:max-w-md">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-brandwhite/40">
+                            <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                        </span>
+                        <input type="text" id="searchInput" oninput="renderPrograms()" placeholder="Search titles, organizers, descriptions, or champion names..." class="w-full bg-richblack border border-bangladesh/50 rounded-xl py-2.5 pl-10 pr-4 text-xs text-white placeholder:text-brandwhite/30 focus:border-caribbean focus:outline-none transition">
+                    </div>
+
+                    <div class="flex items-center gap-3 w-full md:w-auto">
+                        <select id="categoryFilter" onchange="renderPrograms()" class="w-full md:w-48 bg-richblack border border-bangladesh/50 text-brandwhite text-xs font-bold uppercase tracking-wider py-2.5 px-3.5 rounded-xl focus:border-caribbean focus:outline-none cursor-pointer">
+                            <option value="all">All Wings</option>
+                            <option value="SRDB">SRDB</option>
+                            <option value="IT">IT</option>
+                            <option value="scince">Science</option>
+                            <option value="Malayalam">Malayalam</option>
+                            <option value="OTRC">PRO</option>
+                            <option value="Editorial">Editorial</option>
+                            <option value="Acadamic">Academic</option>
+                            <option value="English">English</option>
+                            <option value="Urdu">Urdu</option>
+                            <option value="Arabic">Arabic</option>
+                            <option value="library">Library</option>
+                            <option value="foriegn">Foreign</option>
+                            <option value="SAB">SAB</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Feed header with Dynamic context titles -->
+                <div class="flex items-center justify-between">
+                    <h2 id="feedTitle" class="text-sm font-black text-white uppercase tracking-widest border-l-4 border-caribbean pl-3">All IHSAs Program Inventory</h2>
+                    <span class="text-[10px] text-brandwhite/50 font-bold uppercase tracking-widest" id="itemCountLabel">Showing 1 Record</span>
+                </div>
+
+                <!-- Empty State -->
+                <div id="emptyState" class="hidden bg-darknavy/20 border border-dashed border-bangladesh/60 rounded-3xl p-12 text-center flex-col items-center justify-center space-y-4">
+                    <div class="w-16 h-16 bg-bangladesh/20 text-brandwhite/40 flex items-center justify-center rounded-2xl border border-bangladesh/50 text-2xl">
+                        <i class="fa-solid fa-folder-open"></i>
+                    </div>
+                    <div class="space-y-1">
+                        <h3 class="text-sm font-black text-white uppercase tracking-widest">No Program Reports Located</h3>
+                        <p class="text-xs text-brandwhite/50 max-w-xs leading-relaxed">
+                            Try modifying your search criteria or choosing a different category filter.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Directory Grid Cards -->
+                <div id="programsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Program Cards are rendered here via JavaScript -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="mobileSidebarOverlay" class="hidden fixed inset-0 bg-richblack/80 backdrop-blur-sm z-50 transition-opacity duration-300" onclick="toggleMobileSidebar()">
+        <div id="mobileSidebarDrawer" class="fixed top-0 left-0 h-full w-80 bg-richblack border-r border-bangladesh p-5 space-y-6 flex flex-col justify-between transform -translate-x-full transition-transform duration-300 ease-in-out" onclick="event.stopPropagation()">
+            <div class="space-y-5">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-base font-black tracking-wider text-white uppercase">IHSAs Classes</span>
+                    </div>
+                    <button onclick="toggleMobileSidebar()" class="text-brandwhite/60 hover:text-white text-lg p-1">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <div class="space-y-2" id="mobileClassUnionList">
+                    <!-- Dynamic rendering of unified mobile sidebar links -->
+                </div>
+            </div>
+
+            <div id="mobileSessionContainer" class="space-y-3">
+                <!-- Active union logout or session help -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 1: Master Admin Login (sASHI) -->
+    <div id="adminLoginModal" class="hidden fixed inset-0 bg-richblack/90 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-darknavy border border-bangladesh rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-xl shadow-black/60 transform scale-95 transition-transform duration-200">
+            <div class="flex items-center justify-between pb-3 border-b border-bangladesh/50">
+                <h3 class="text-sm font-black text-white uppercase tracking-widest">Master Admin Auth</h3>
+                <button onclick="toggleAdminModal(false)" class="text-brandwhite/60 hover:text-white text-sm"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="space-y-3">
+                <p class="text-[11px] text-brandwhite/60 leading-relaxed">
+                    Verify master session access by entering the global system administrator password.
+                </p>
+                <div>
+                    <label class="block text-[9px] font-bold uppercase tracking-widest text-brandwhite/50 mb-1">Passcode</label>
+                    <input type="password" id="adminPassInput" placeholder="Enter Admin Password..." class="w-full bg-richblack border border-bangladesh/60 rounded-xl px-3 py-2 text-xs text-white placeholder:text-brandwhite/30 focus:border-caribbean focus:outline-none">
+                    <span id="adminLoginErrorMsg" class="hidden text-[10px] text-rose-400 font-bold uppercase mt-1.5 block">Incorrect Admin Credentials</span>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-2 pt-2">
+                <button onclick="toggleAdminModal(false)" class="bg-transparent hover:bg-richblack/50 text-brandwhite text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-xl transition">Cancel</button>
+                <button onclick="submitAdminLogin()" class="bg-caribbean hover:bg-caribbean/80 text-white text-xs font-black uppercase tracking-wider px-4 py-2 rounded-xl transition">Authenticate</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 2: Class Union Login & Password Change Popup -->
+    <div id="classLoginModal" class="hidden fixed inset-0 bg-richblack/90 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-darknavy border border-bangladesh rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-xl shadow-black/60">
+            <div class="flex items-center justify-between pb-3 border-b border-bangladesh/50">
+                <h3 id="classLoginTitle" class="text-sm font-black text-white uppercase tracking-widest">Chamber Login</h3>
+                <button onclick="toggleClassLoginModal(false)" class="text-brandwhite/60 hover:text-white text-sm"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- TAB CONTROLS (Login vs Change Password) -->
+            <div class="flex bg-richblack/60 p-1 rounded-xl border border-bangladesh/50">
+                <button onclick="switchClassModalTab('login')" id="tabBtnLogin" class="flex-1 text-center text-[10px] font-black uppercase tracking-widest py-1.5 rounded-lg text-white bg-caribbean transition">Login</button>
+                <button onclick="switchClassModalTab('change')" id="tabBtnChange" class="flex-1 text-center text-[10px] font-black uppercase tracking-widest py-1.5 rounded-lg text-brandwhite/50 hover:text-white transition">Change Code</button>
+            </div>
+            
+            <!-- VIEW A: LOGIN -->
+            <div id="classLoginView" class="space-y-3">
+                <div class="space-y-2">
+                    <div>
+                        <label class="block text-[9px] font-bold uppercase tracking-widest text-brandwhite/50 mb-1">Authorized Username</label>
+                        <input type="text" id="classLoginUser" disabled class="w-full bg-richblack/60 border border-bangladesh/30 rounded-xl px-3 py-2 text-xs text-brandwhite/40 cursor-not-allowed">
+                    </div>
+                    <div>
+                        <label class="block text-[9px] font-bold uppercase tracking-widest text-brandwhite/50 mb-1">Chamber Password</label>
+                        <input type="password" id="classLoginPass" placeholder="Enter Passcode..." class="w-full bg-richblack border border-bangladesh/60 rounded-xl px-3 py-2 text-xs text-white placeholder:text-brandwhite/30 focus:border-caribbean focus:outline-none">
+                    </div>
+                </div>
+                <span id="classLoginErrorMsg" class="hidden text-[10px] text-rose-400 font-bold uppercase mt-1 block">Incorrect passcode entered</span>
+                <div class="flex items-center justify-end gap-2 pt-2">
+                    <button onclick="toggleClassLoginModal(false)" class="bg-transparent text-brandwhite text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-xl transition">Cancel</button>
+                    <button onclick="submitClassUnionLogin()" class="bg-caribbean hover:bg-caribbean/80 text-white text-xs font-black uppercase tracking-wider px-4 py-2 rounded-xl transition">Enter Chamber</button>
+                </div>
+            </div>
+
+            <!-- VIEW B: CHANGE PASSWORD -->
+            <div id="classChangePassView" class="hidden space-y-3">
+                <div class="space-y-2">
+                    <div>
+                        <label class="block text-[9px] font-bold uppercase tracking-widest text-brandwhite/50 mb-1">Current Passcode</label>
+                        <input type="password" id="changePassCurrent" placeholder="Current code..." class="w-full bg-richblack border border-bangladesh/60 rounded-xl px-3 py-2 text-xs text-white focus:border-caribbean focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[9px] font-bold uppercase tracking-widest text-brandwhite/50 mb-1">New Passcode</label>
+                        <input type="password" id="changePassNew" placeholder="New code..." class="w-full bg-richblack border border-bangladesh/60 rounded-xl px-3 py-2 text-xs text-white focus:border-caribbean focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[9px] font-bold uppercase tracking-widest text-brandwhite/50 mb-1">Confirm Passcode</label>
+                        <input type="password" id="changePassConfirm" placeholder="Confirm code..." class="w-full bg-richblack border border-bangladesh/60 rounded-xl px-3 py-2 text-xs text-white focus:border-caribbean focus:outline-none">
+                    </div>
+                </div>
+                <div id="changePassErrorMsg" class="hidden bg-rose-950/20 border border-rose-500/20 p-2.5 rounded-xl">
+                    <span id="changePassErrorText" class="text-[10px] text-rose-400 font-bold uppercase block">Verification failed</span>
+                </div>
+                <div class="flex items-center justify-end gap-2 pt-2">
+                    <button onclick="toggleClassLoginModal(false)" class="bg-transparent text-brandwhite text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-xl transition">Cancel</button>
+                    <button onclick="submitPasswordChange()" class="bg-caribbean hover:bg-caribbean/80 text-white text-xs font-black uppercase tracking-wider px-4 py-2 rounded-xl transition">Update Code</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 3: Log / Modify Event Report Dialog -->
+    <div id="programModal" class="hidden fixed inset-0 bg-richblack/95 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-darknavy border border-bangladesh rounded-3xl max-w-2xl w-full p-6 sm:p-8 space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between pb-3 border-b border-bangladesh/50">
+                <h3 id="modalTitleText" class="text-base font-black text-white uppercase tracking-widest">Publish New Report</h3>
+                <button onclick="toggleProgramModal(false)" class="text-brandwhite/60 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <form id="programForm" class="space-y-4" onsubmit="event.preventDefault(); submitProgramForm();">
+                <input type="hidden" id="editProgramId" value="">
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-extrabold uppercase tracking-widest text-brandwhite/50 mb-1.5">Program Title</label>
+                        <input type="text" id="progTitle" required class="w-full bg-richblack border border-bangladesh/60 rounded-xl px-3 py-2.5 text-xs text-white focus:border-caribbean focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-extrabold uppercase tracking-widest text-brandwhite/50 mb-1.5">Date Conducted</label>
+                        <input type="date" id="progDate" required class="w-full bg-richblack border border-bangladesh/60 rounded-xl px-3 py-2.5 text-xs text-white focus:border-caribbean focus:outline-none">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-extrabold uppercase tracking-widest text-brandwhite/50 mb-1.5">Category</label>
+                        <select id="progCategory" class="w-full bg-richblack border border-bangladesh/60 rounded-xl px-3 py-2.5 text-xs text-white focus:border-caribbean focus:outline-none">
+                            <option value="SRDB">SRDB</option>
+                            <option value="IT">IT</option>
+                            <option value="scince">Science</option>
+                            <option value="Malayalam">Malayalam</option>
+                            <option value="OTRC">PRO</option>
+                            <option value="Editorial">Editorial</option>
+                            <option value="Acadamic">Academic</option>
+                            <option value="English">English</option>
+                            <option value="Urdu">Urdu</option>
+                            <option value="Arabic">Arabic</option>
+                            <option value="library">Library</option>
+                            <option value="foriegn">Foreign</option>
+                            <option value="SAB">SAB</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-extrabold uppercase tracking-widest text-brandwhite/50 mb-1.5">Coordinator Cell / Organizer</label>
+                        <input type="text" id="progCoordinator" required placeholder="e.g. IHSAs Academic Cell" class="w-full bg-richblack border border-bangladesh/60 rounded-xl px-3 py-2.5 text-xs text-white focus:border-caribbean focus:outline-none">
+                    </div>
+                </div>
+
+                <!-- Standings Podium -->
+                <div class="bg-richblack/60 p-4 rounded-2xl border border-bangladesh/40 space-y-3">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-trophy text-amber-400 text-xs animate-bounce"></i>
+                        <h4 class="text-[10px] font-black uppercase tracking-widest text-white">Chamber Champion Podium (Optional)</h4>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-[9px] font-bold uppercase tracking-widest text-brandwhite/40 mb-1">🥇 1st Prize</label>
+                            <input type="text" id="progWin1" class="w-full bg-richblack border border-bangladesh/40 rounded-xl px-3 py-2 text-xs text-white focus:border-caribbean focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-bold uppercase tracking-widest text-brandwhite/40 mb-1">🥈 2nd Prize</label>
+                            <input type="text" id="progWin2" class="w-full bg-richblack border border-bangladesh/40 rounded-xl px-3 py-2 text-xs text-white focus:border-caribbean focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-bold uppercase tracking-widest text-brandwhite/40 mb-1">🥉 3rd Prize</label>
+                            <input type="text" id="progWin3" class="w-full bg-richblack border border-bangladesh/40 rounded-xl px-3 py-2 text-xs text-white focus:border-caribbean focus:outline-none">
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-extrabold uppercase tracking-widest text-brandwhite/50 mb-1.5">Program Summary Description</label>
+                    <textarea id="progDescription" rows="4" required placeholder="Outline student participation stats, scoring guidelines, and general overview..." class="w-full bg-richblack border border-bangladesh/60 rounded-xl px-3 py-2.5 text-xs text-white focus:border-caribbean focus:outline-none resize-none"></textarea>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 pt-3 border-t border-bangladesh/50">
+                    <button type="button" onclick="toggleProgramModal(false)" class="bg-transparent hover:bg-richblack/50 text-brandwhite text-xs font-bold uppercase tracking-wider px-5 py-2.5 rounded-xl transition">Close</button>
+                    <button type="submit" class="bg-caribbean hover:bg-caribbean/80 text-white text-xs font-black uppercase tracking-wider px-5 py-2.5 rounded-xl transition shadow-md shadow-caribbean/20">Publish Report</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal 5: Reusable Custom Confirmation Popup -->
+    <div id="confirmModal" class="hidden fixed inset-0 bg-richblack/90 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+        <div class="bg-darknavy border border-bangladesh rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-xl">
+            <div class="flex items-center justify-between pb-2 border-b border-bangladesh/50">
+                <h3 id="confirmModalTitle" class="text-xs font-black text-white uppercase tracking-widest">Verify Operation</h3>
+                <button onclick="dismissCustomConfirm(false)" class="text-brandwhite/60 hover:text-white text-sm"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <p id="confirmModalText" class="text-[11px] text-brandwhite/70 leading-relaxed">
+                Are you absolutely sure you want to perform this permanent operation? This action cannot be reverted.
+            </p>
+            <div class="flex items-center justify-end gap-2 pt-1">
+                <button onclick="dismissCustomConfirm(false)" class="bg-transparent text-brandwhite text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-xl transition">Cancel</button>
+                <button onclick="dismissCustomConfirm(true)" class="bg-rose-600 hover:bg-rose-500 text-white text-xs font-black uppercase tracking-wider px-4 py-2 rounded-xl transition">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Global Toast Alert HUD -->
+    <div id="toastNotification" class="fixed bottom-6 left-6 z-50 bg-darknavy border-2 border-caribbean text-brandwhite px-4 py-3 rounded-2xl flex items-center space-x-3 shadow-2xl transition duration-300 transform translate-y-20 opacity-0 pointer-events-none">
+        <span id="toastIcon" class="text-caribbean"><i class="fa-solid fa-circle-check"></i></span>
+        <span id="toastMsg" class="text-xs font-extrabold uppercase tracking-widest">Operation Successful</span>
+    </div>
+
+    <!-- Footer branding -->
+    <footer class="bg-richblack border-t border-bangladesh/40 py-6 px-4">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
+            <div>
+                <span class="text-[10px] text-brandwhite/40 uppercase tracking-widest font-black block">IHSAs STUDENTS UNION PORTAL</span>
+                <span class="text-[9px] text-brandwhite/30 block mt-1">Authorized role-based student activity recording platform. Designed with primary dark theme combos.</span>
+            </div>
+            <div class="text-[9px] text-brandwhite/40 tracking-wider">
+                &copy; 2026 IHSAs Students Union. Secured under system protocols.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // 10 Class Unions definition
+        const CLASS_UNIONS = [
+            { id: 1, name: "Marjan", username: "marjan" },
+            { id: 2, name: "Wahda", username: "wahda" },
+            { id: 3, name: "Suhba", username: "suhba" },
+            { id: 4, name: "Hira", username: "hira" },
+            { id: 5, name: "Safe", username: "safe" },
+            { id: 6, name: "Isra", username: "isra" },
+            { id: 7, name: "Chirag", username: "chirag" },
+            { id: 8, name: "Safwa", username: "safwa" },
+            { id: 9, name: "Alif", username: "alif" },
+            { id: 10, name: "Parwaz", username: "parwaz" }
+        ];
+
+        // Passcodes mapping (Updated safe=5, isra=6)
+        const DEFAULT_PASSWORDS = {
+            "marjan": "1",
+            "wahda": "2",
+            "suhba": "3",
+            "hira": "4",
+            "safe": "5",
+            "isra": "6",
+            "chirag": "7",
+            "safwa": "8",
+            "alif": "9",
+            "parwaz": "10"
+        };
+
+        // Preloaded official winner data
+        const DEFAULT_PROGRAMS = [
+            {
+                id: "prog-webdev",
+                title: "Web Development Competition",
+                category: "IT",
+                date: "2026-06-15",
+                coordinator: "IHSAs Academic Cell",
+                createdBy: "general", 
+                description: "Our high-intensity, landmark academic web technologies battle of the season. Student teams designed and deployed responsive frontend templates within strict constraints. The judges awarded prizes based on code quality, interactive accessibility features, and adherence to visual design frameworks.",
+                winners: {
+                    first: "Asim",
+                    second: "Nabhan",
+                    third: "Shafi"
+                },
+                likes: 12,
+                dislikes: 1,
+                status: "approved"
+            }
+        ];
+
+        let programs = [];
+        let chamberCredentials = {};
+
+        // Session variables for authentication
+        let isAdmin = sessionStorage.getItem("ihsas_admin_active") === "true"; // Super Admin "sASHI"
+        let activeChamberUser = sessionStorage.getItem("ihsas_active_chamber") || null; // e.g. "Safe"
+        let selectedChamberFilter = sessionStorage.getItem("ihsas_selected_chamber_filter") || "all"; // Sidebar context
+        
+        let selectedChamberToAuth = null;
+        let deleteIdToProcess = null;
+
+        // Initialize portal on load
+        window.onload = function() {
+            // Guardrail initialization: programs
+            try {
+                const storedPrograms = localStorage.getItem("ihsas_programs");
+                if (storedPrograms && storedPrograms !== "[]") {
+                    programs = JSON.parse(storedPrograms);
+                } else {
+                    programs = [...DEFAULT_PROGRAMS];
+                    localStorage.setItem("ihsas_programs", JSON.stringify(programs));
+                }
+            } catch (e) {
+                programs = [...DEFAULT_PROGRAMS];
+            }
+
+            // Guardrail credentials initialization (Safe=5, Isra=6 mapping verification)
+            try {
+                const storedCreds = localStorage.getItem("ihsas_chamber_credentials");
+                let parsedCreds = storedCreds ? JSON.parse(storedCreds) : null;
+                if (parsedCreds && (parsedCreds.safe === "14" || parsedCreds.isra === "13")) {
+                    parsedCreds.safe = "5";
+                    parsedCreds.isra = "6";
+                    chamberCredentials = parsedCreds;
+                    saveCredentialsToStorage();
+                } else if (parsedCreds) {
+                    chamberCredentials = parsedCreds;
+                } else {
+                    initializeDefaultCredentials();
+                }
+            } catch (e) {
+                initializeDefaultCredentials();
+            }
+
+            renderSidebarList();
+            updateSessionIndicatorsUI();
+            renderPrograms();
+        };
+
+        function saveProgramsToStorage() {
+            try {
+                localStorage.setItem("ihsas_programs", JSON.stringify(programs));
+            } catch (e) {
+                console.error("Storage write failed:", e);
+            }
+        }
+
+        function initializeDefaultCredentials() {
+            chamberCredentials = { ...DEFAULT_PASSWORDS };
+            saveCredentialsToStorage();
+        }
+
+        function saveCredentialsToStorage() {
+            try {
+                localStorage.setItem("ihsas_chamber_credentials", JSON.stringify(chamberCredentials));
+            } catch (e) {
+                console.error("Credentials write failed:", e);
+            }
+        }
+
+        // Master Admin sASHI Auth
+        function toggleAdminModal(show) {
+            const modal = document.getElementById("adminLoginModal");
+            const err = document.getElementById("adminLoginErrorMsg");
+            const passInput = document.getElementById("adminPassInput");
+
+            err.classList.add("hidden");
+            passInput.value = "";
+
+            if (show) {
+                modal.classList.remove("hidden");
+                passInput.focus();
+            } else {
+                modal.classList.add("hidden");
+            }
+        }
+
+        function submitAdminLogin() {
+            const password = document.getElementById("adminPassInput").value;
+            const err = document.getElementById("adminLoginErrorMsg");
+
+            if (password === "sASHI") {
+                isAdmin = true;
+                sessionStorage.setItem("ihsas_admin_active", "true");
+                
+                // Clear any individual chamber session
+                activeChamberUser = null;
+                sessionStorage.removeItem("ihsas_active_chamber");
+
+                err.classList.add("hidden");
+                toggleAdminModal(false);
+                showToast("Authenticated as Master Admin!", true);
+                
+                updateSessionIndicatorsUI();
+                renderSidebarList();
+                renderPrograms();
+            } else {
+                err.classList.remove("hidden");
+                showToast("Verification Failed", false);
+            }
+        }
+
+        function terminateMasterSession() {
+            isAdmin = false;
+            sessionStorage.removeItem("ihsas_admin_active");
+
+            showToast("Logged out of master session.", true);
+            updateSessionIndicatorsUI();
+            renderSidebarList();
+            renderPrograms();
+        }
+
+        function toggleMobileSidebar() {
+            const overlay = document.getElementById("mobileSidebarOverlay");
+            const drawer = document.getElementById("mobileSidebarDrawer");
+
+            if (overlay.classList.contains("hidden")) {
+                overlay.classList.remove("hidden");
+                drawer.classList.remove("-translate-x-full");
+                setTimeout(() => {
+                    overlay.classList.add("opacity-100");
+                }, 50);
+            } else {
+                overlay.classList.remove("opacity-100");
+                drawer.classList.add("-translate-x-full");
+                setTimeout(() => {
+                    overlay.classList.add("hidden");
+                }, 300);
+            }
+        }
+
+        // Render Desktop and Mobile sidebar lists dynamically
+        function renderSidebarList() {
+            const listContainer = document.getElementById("classUnionSidebarList");
+            const mobileContainer = document.getElementById("mobileClassUnionList");
+            
+            listContainer.innerHTML = "";
+            mobileContainer.innerHTML = "";
+
+            // All IHSAs Option
+            const isAllActive = selectedChamberFilter === "all";
+            const allBtnHtml = `
+                <button onclick="setChamberFilter('all');" class="group w-full flex items-center justify-between p-3.5 rounded-xl transition duration-150 ${isAllActive ? 'bg-caribbean/30 border border-caribbean/60' : 'bg-transparent border border-transparent hover:bg-darknavy/40'}">
+                    <div class="flex items-center space-x-2.5">
+                        <span class="w-2 h-2 rounded-full bg-brandwhite"></span>
+                        <span class="text-xs font-black text-white uppercase tracking-wider">All IHSAs Programs</span>
+                    </div>
+                    <span class="text-[10px] text-brandwhite/50"><i class="fa-solid fa-globe"></i></span>
+                </button>
+            `;
+            listContainer.insertAdjacentHTML('beforeend', allBtnHtml);
+            mobileContainer.insertAdjacentHTML('beforeend', allBtnHtml);
+
+            // Classes Unions consolidated Dropdown
+            const classesDropdownHtml = `
+                <div class="pt-2 border-t border-bangladesh/30 mt-3">
+                    <span class="text-[9px] font-black uppercase tracking-widest text-brandwhite/40 block mb-2 px-1">Classes Unions</span>
+                </div>
+                <div class="space-y-2">
+                    <div class="relative">
+                        <select id="sidebarClassSelector" onchange="onSidebarClassSelectorChanged(this.value)" class="w-full bg-darknavy border border-bangladesh/50 text-brandwhite text-xs font-black uppercase tracking-wider py-2.5 px-3 rounded-xl focus:border-caribbean focus:outline-none cursor-pointer">
+                            <option value="" disabled ${selectedChamberFilter === "all" ? "selected" : ""}>Select Class...</option>
+                            ${CLASS_UNIONS.map(cls => `<option value="${cls.name}" ${selectedChamberFilter === cls.name ? "selected" : ""}>Class: ${cls.name}</option>`).join('')}
+                        </select>
+                    </div>
+                    
+                    ${selectedChamberFilter !== "all" ? `
+                        <div class="p-2.5 rounded-xl bg-richblack/60 border border-bangladesh/50 flex flex-col gap-2">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[8px] font-black uppercase tracking-wider text-brandwhite/50">Admin Control</span>
+                                ${activeChamberUser === selectedChamberFilter ? 
+                                    `<span class="text-[8px] font-black uppercase tracking-widest text-emerald-400"><i class="fa-solid fa-circle-check"></i> Connected</span>` :
+                                    `<span class="text-[8px] font-black uppercase tracking-widest text-rose-400/80"><i class="fa-solid fa-lock"></i> Locked</span>`
+                                }
+                            </div>
+                            ${activeChamberUser === selectedChamberFilter ?
+                                `<button onclick="terminateChamberSession()" class="w-full text-center text-[9px] font-black text-rose-300 bg-rose-950/40 py-1.5 rounded-lg border border-rose-500/30">Logout Session</button>` :
+                                `<button onclick="handleChamberAuthLaunch('${selectedChamberFilter}')" class="w-full text-center text-[9px] font-black text-white bg-caribbean hover:bg-caribbean/80 py-1.5 rounded-lg transition">🔑 Enter Chamber</button>`
+                            }
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            listContainer.insertAdjacentHTML('beforeend', classesDropdownHtml);
+            mobileContainer.insertAdjacentHTML('beforeend', classesDropdownHtml);
+        }
+
+        function onSidebarClassSelectorChanged(val) {
+            setChamberFilter(val);
+        }
+
+        function setChamberFilter(chamberName) {
+            selectedChamberFilter = chamberName;
+            sessionStorage.setItem("ihsas_selected_chamber_filter", selectedChamberFilter);
+
+            renderSidebarList();
+            updateSessionIndicatorsUI();
+            renderPrograms();
+        }
+
+        function handleChamberAuthLaunch(chamberName) {
+            selectedChamberToAuth = chamberName;
+            document.getElementById("classLoginTitle").textContent = `${chamberName} Chamber Login`;
+            
+            const foundChamber = CLASS_UNIONS.find(c => c.name === chamberName);
+            document.getElementById("classLoginUser").value = foundChamber ? foundChamber.username : "";
+            document.getElementById("classLoginPass").value = "";
+
+            toggleClassLoginModal(true);
+        }
+
+        function switchClassModalTab(tab) {
+            const btnLogin = document.getElementById("tabBtnLogin");
+            const btnChange = document.getElementById("tabBtnChange");
+            const viewLogin = document.getElementById("classLoginView");
+            const viewChange = document.getElementById("classChangePassView");
+
+            if (tab === 'login') {
+                btnLogin.className = "flex-1 text-center text-[10px] font-black uppercase tracking-widest py-1.5 rounded-lg text-white bg-caribbean transition";
+                btnChange.className = "flex-1 text-center text-[10px] font-black uppercase tracking-widest py-1.5 rounded-lg text-brandwhite/50 hover:text-white transition";
+                viewLogin.classList.remove("hidden");
+                viewChange.classList.add("hidden");
+            } else {
+                btnLogin.className = "flex-1 text-center text-[10px] font-black uppercase tracking-widest py-1.5 rounded-lg text-brandwhite/50 hover:text-white transition";
+                btnChange.className = "flex-1 text-center text-[10px] font-black uppercase tracking-widest py-1.5 rounded-lg text-white bg-caribbean transition";
+                viewLogin.classList.add("hidden");
+                viewChange.classList.remove("hidden");
+            }
+        }
+
+        function toggleClassLoginModal(show) {
+            const modal = document.getElementById("classLoginModal");
+            const loginErr = document.getElementById("classLoginErrorMsg");
+            const changeErr = document.getElementById("changePassErrorMsg");
+
+            loginErr.classList.add("hidden");
+            changeErr.classList.add("hidden");
+
+            switchClassModalTab('login');
+
+            if (show) {
+                modal.classList.remove("hidden");
+                document.getElementById("classLoginPass").value = "";
+                document.getElementById("changePassCurrent").value = "";
+                document.getElementById("changePassNew").value = "";
+                document.getElementById("changePassConfirm").value = "";
+            } else {
+                modal.classList.add("hidden");
+            }
+        }
+
+        function submitClassUnionLogin() {
+            const passwordInput = document.getElementById("classLoginPass").value;
+            const errMsg = document.getElementById("classLoginErrorMsg");
+            
+            const chamberInfo = CLASS_UNIONS.find(c => c.name === selectedChamberToAuth);
+            if (!chamberInfo) return;
+
+            const savedPass = chamberCredentials[chamberInfo.username];
+
+            if (passwordInput === savedPass) {
+                activeChamberUser = selectedChamberToAuth;
+                sessionStorage.setItem("ihsas_active_chamber", activeChamberUser);
+                
+                selectedChamberFilter = selectedChamberToAuth;
+                sessionStorage.setItem("ihsas_selected_chamber_filter", selectedChamberFilter);
+                
+                isAdmin = false;
+                sessionStorage.removeItem("ihsas_admin_active");
+
+                errMsg.classList.add("hidden");
+                toggleClassLoginModal(false);
+                showToast(`${selectedChamberToAuth} Union Authorized!`, true);
+                
+                updateSessionIndicatorsUI();
+                renderSidebarList();
+                renderPrograms();
+            } else {
+                errMsg.classList.remove("hidden");
+                showToast("Authentication Failed", false);
+            }
+        }
+
+        function submitPasswordChange() {
+            const currentPass = document.getElementById("changePassCurrent").value;
+            const newPass = document.getElementById("changePassNew").value;
+            const confirmPass = document.getElementById("changePassConfirm").value;
+            const errMsg = document.getElementById("changePassErrorMsg");
+            const errText = document.getElementById("changePassErrorText");
+
+            const chamberInfo = CLASS_UNIONS.find(c => c.name === selectedChamberToAuth);
+            if (!chamberInfo) return;
+
+            const correctCurrent = chamberCredentials[chamberInfo.username];
+
+            if (currentPass !== correctCurrent) {
+                errText.textContent = "Current password verification failed.";
+                errMsg.classList.remove("hidden");
+                showToast("Verification failed", false);
+                return;
+            }
+
+            if (!newPass) {
+                errText.textContent = "New password cannot be blank.";
+                errMsg.classList.remove("hidden");
+                showToast("Password empty", false);
+                return;
+            }
+
+            if (newPass !== confirmPass) {
+                errText.textContent = "New passwords do not match.";
+                errMsg.classList.remove("hidden");
+                showToast("Passwords mismatch", false);
+                return;
+            }
+
+            chamberCredentials[chamberInfo.username] = newPass;
+            saveCredentialsToStorage();
+
+            showToast("Password updated! Logging in...", true);
+            
+            activeChamberUser = selectedChamberToAuth;
+            sessionStorage.setItem("ihsas_active_chamber", activeChamberUser);
+            
+            selectedChamberFilter = selectedChamberToAuth;
+            sessionStorage.setItem("ihsas_selected_chamber_filter", selectedChamberFilter);
+            
+            isAdmin = false;
+            sessionStorage.removeItem("ihsas_admin_active");
+
+            toggleClassLoginModal(false);
+            updateSessionIndicatorsUI();
+            renderSidebarList();
+            renderPrograms();
+        }
+
+        function terminateChamberSession() {
+            if (!activeChamberUser) return;
+            const name = activeChamberUser;
+            activeChamberUser = null;
+            sessionStorage.removeItem("ihsas_active_chamber");
+            
+            selectedChamberFilter = "all";
+            sessionStorage.setItem("ihsas_selected_chamber_filter", "all");
+            
+            showToast(`${name} Session Ended.`, true);
+            updateSessionIndicatorsUI();
+            renderSidebarList();
+            renderPrograms();
+        }
+
+        function updateSessionIndicatorsUI() {
+            const adminIndicator = document.getElementById("adminIndicator");
+            const classIndicator = document.getElementById("classIndicator");
+            const classIndicatorText = document.getElementById("classIndicatorText");
+            const masterAdminLoginBtn = document.getElementById("masterAdminLoginBtn");
+            const masterLogoutBtn = document.getElementById("masterLogoutBtn");
+            const addBtn = document.getElementById("addProgramBtn");
+            const resetBtn = document.getElementById("resetDbBtn");
+            const sessionWidget = document.getElementById("sessionStatusWidget");
+            const activeSessionName = document.getElementById("activeSessionName");
+            const mobileSessionContainer = document.getElementById("mobileSessionContainer");
+
+            if (isAdmin) {
+                adminIndicator.classList.remove("hidden");
+                adminIndicator.classList.add("flex");
+                masterAdminLoginBtn.classList.add("hidden");
+                masterLogoutBtn.classList.remove("hidden");
+
+                addBtn.classList.remove("hidden");
+                addBtn.classList.add("flex");
+                resetBtn.classList.remove("hidden");
+
+                sessionWidget.classList.remove("hidden");
+                activeSessionName.textContent = "Master Admin";
+            } else {
+                adminIndicator.classList.add("hidden");
+                adminIndicator.classList.remove("flex");
+                masterAdminLoginBtn.classList.remove("hidden");
+                masterLogoutBtn.classList.add("hidden");
+                resetBtn.classList.add("hidden");
+            }
+
+            if (activeChamberUser) {
+                classIndicator.classList.remove("hidden");
+                classIndicator.classList.add("flex");
+                classIndicatorText.textContent = `${activeChamberUser} Active`;
+                addBtn.classList.remove("hidden");
+                addBtn.classList.add("flex");
+                resetBtn.classList.add("hidden");
+                sessionWidget.classList.remove("hidden");
+                activeSessionName.textContent = `${activeChamberUser} Union`;
+                mobileSessionContainer.innerHTML = `
+                    <div class="space-y-2 p-2 bg-darknavy rounded-2xl border border-caribbean/30 text-center">
+                        <span class="text-[9px] font-bold text-caribbean uppercase tracking-wider block">Authorized Session</span>
+                        <span class="text-xs font-black text-white block uppercase tracking-widest">${activeChamberUser} Union</span>
+                        <button onclick="terminateChamberSession()" class="w-full mt-2 bg-rose-950/40 hover:bg-rose-900/60 text-rose-200 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition">
+                            Logout Union
+                        </button>
+                    </div>
+                `;
+            } else {
+                classIndicator.classList.add("hidden");
+                classIndicator.classList.remove("flex");
+                sessionWidget.classList.add("hidden");
+                if (!isAdmin) {
+                    addBtn.classList.add("hidden");
+                    addBtn.classList.remove("flex");
+                    resetBtn.classList.add("hidden");
+                    resetBtn.classList.remove("flex");
+                }
+                
+                mobileSessionContainer.innerHTML = "";
+            }
+        }
+
+        function renderPrograms() {
+            const grid = document.getElementById("programsGrid");
+            const emptyState = document.getElementById("emptyState");
+            const query = document.getElementById("searchInput").value.toLowerCase();
+            const selectedCat = document.getElementById("categoryFilter").value;
+            grid.innerHTML = "";
+
+            const filtered = programs.filter(p => {
+                const matchesSearch = p.title.toLowerCase().includes(query) ||
+                                     p.description.toLowerCase().includes(query) ||
+                                     p.coordinator.toLowerCase().includes(query) ||
+                                     (p.winners && (
+                                         (p.winners.first || "").toLowerCase().includes(query) ||
+                                         (p.winners.second || "").toLowerCase().includes(query) ||
+                                         (p.winners.third || "").toLowerCase().includes(query)
+                                     ));
+                const matchesCategory = selectedCat === "all" || p.category === selectedCat;
+                
+                let matchesSidebarContext = false;
+                if (selectedChamberFilter === "all") {
+                    matchesSidebarContext = (p.createdBy === "general" || p.createdBy === "IHSAs" || !p.createdBy);
+                } else {
+                    matchesSidebarContext = (p.createdBy === selectedChamberFilter);
+                }
+
+                let matchesStatusApproval = false;
+                const status = p.status || "approved";
+                if (isAdmin) {
+                    matchesStatusApproval = true; 
+                } else if (activeChamberUser) {
+                    matchesStatusApproval = (status === "approved") || (p.createdBy === activeChamberUser);
+                } else {
+                    matchesStatusApproval = (status === "approved");
+                }
+                
+                return matchesSearch && matchesCategory && matchesSidebarContext && matchesStatusApproval;
+            });
+
+            const feedTitle = document.getElementById("feedTitle");
+            if (selectedChamberFilter === "all") {
+                feedTitle.textContent = "All IHSAs Program Inventory";
+            } else {
+                feedTitle.textContent = `${selectedChamberFilter} Chamber Directory`;
+            }
+
+            document.getElementById("totalEventsStat").textContent = filtered.length;
+
+            if (filtered.length === 0) {
+                grid.classList.add("hidden");
+                emptyState.classList.remove("hidden");
+                emptyState.classList.add("flex");
+                return;
+            }
+
+            grid.classList.remove("hidden");
+            emptyState.classList.add("hidden");
+
+            const activeVotes = JSON.parse(sessionStorage.getItem("ihsas_user_votes") || "{}");
+
+            filtered.forEach(p => {
+                let themeBg = "bg-sky-500/10 text-sky-400 border-sky-500/20";
+                let iconClass = "fa-solid fa-graduation-cap";
+                
+                const canModify = isAdmin || (activeChamberUser && p.createdBy === activeChamberUser);
+                let manageBtnHtml = "";
+                if (canModify) {
+                    manageBtnHtml = `
+                        <div class="flex items-center space-x-2 border-t border-bangladesh/40 pt-4 mt-4 justify-end">
+                            <button onclick="editProgramRecord('${p.id}')" class="text-[10px] font-black text-caribbean uppercase tracking-widest hover:text-white transition-colors duration-150 py-1 px-2.5 rounded bg-caribbean/10 border border-caribbean/30 hover:bg-caribbean">
+                                <i class="fa-solid fa-pen-to-square mr-1"></i> Edit
+                            </button>
+                            <button onclick="triggerDeleteConfirm('${p.id}')" class="text-[10px] font-black text-rose-400 uppercase tracking-widest hover:text-white transition-colors duration-150 py-1 px-2.5 rounded bg-rose-950/20 border border-rose-500/20 hover:bg-rose-950">
+                                <i class="fa-solid fa-trash-can mr-1"></i> Delete
+                            </button>
+                        </div>
+                    `;
+                }
+
+                let statusBadgeHtml = "";
+                const currentStatus = p.status || "approved";
+                if (currentStatus === "approved") {
+                    statusBadgeHtml = `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded text-[9px] uppercase font-black"><i class="fa-solid fa-circle-check mr-1"></i> Approved</span>`;
+                } else if (currentStatus === "pending") {
+                    statusBadgeHtml = `<span class="bg-amber-500/10 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded text-[9px] uppercase font-black animate-pulse"><i class="fa-solid fa-clock mr-1"></i> Pending Approval</span>`;
+                } else if (currentStatus === "rejected") {
+                    statusBadgeHtml = `<span class="bg-rose-500/10 text-rose-400 border border-rose-500/30 px-2 py-0.5 rounded text-[9px] uppercase font-black"><i class="fa-solid fa-circle-xmark mr-1"></i> Rejected</span>`;
+                }
+
+                let approvalActionsHtml = "";
+                if (isAdmin && p.createdBy !== "general" && p.createdBy !== "IHSAs") {
+                    approvalActionsHtml = `
+                        <div class="flex flex-wrap items-center gap-2 border-t border-bangladesh/30 pt-3 mt-3 justify-start bg-richblack/40 p-2.5 rounded-xl">
+                            <span class="text-[9px] text-brandwhite/40 uppercase font-black tracking-wider block">Approval Control:</span>
+                            ${currentStatus !== "approved" ? `
+                                <button onclick="updateProgramStatus('${p.id}', 'approved')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg transition-all flex items-center space-x-1 shadow">
+                                    <i class="fa-solid fa-check"></i> <span>Approve</span>
+                                </button>
+                            ` : ''}
+                            ${currentStatus !== "rejected" ? `
+                                <button onclick="updateProgramStatus('${p.id}', 'rejected')" class="bg-rose-600 hover:bg-rose-500 text-white text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg transition-all flex items-center space-x-1 shadow">
+                                    <i class="fa-solid fa-xmark"></i> <span>Reject</span>
+                                </button>
+                            ` : ''}
+                        </div>
+                    `;
+                }
+
+                let winnerBadgeHtml = "";
+                if (p.winners && (p.winners.first || p.winners.second || p.winners.third)) {
+                    winnerBadgeHtml = `
+                        <div class="bg-richblack/60 border border-bangladesh/40 p-3 rounded-xl mt-4 space-y-1.5">
+                            <span class="text-[8px] font-extrabold text-brandwhite/40 uppercase tracking-widest block"><i class="fa-solid fa-award mr-1 text-yellow-400"></i> Standings Podium</span>
+                            <div class="grid grid-cols-3 gap-2 text-center">
+                                ${p.winners.first ? `<div class="p-1 rounded bg-yellow-500/10 border border-yellow-500/20"><span class="text-[8px] block text-yellow-400 uppercase font-black">1st</span><span class="text-[10px] text-white truncate block font-bold">${p.winners.first}</span></div>` : ''}
+                                ${p.winners.second ? `<div class="p-1 rounded bg-slate-400/10 border border-slate-400/20"><span class="text-[8px] block text-slate-300 uppercase font-black">2nd</span><span class="text-[10px] text-white truncate block font-bold">${p.winners.second}</span></div>` : ''}
+                                ${p.winners.third ? `<div class="p-1 rounded bg-amber-700/10 border border-amber-700/20"><span class="text-[8px] block text-amber-500 uppercase font-black">3rd</span><span class="text-[10px] text-white truncate block font-bold">${p.winners.third}</span></div>` : ''}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                const userVote = activeVotes[p.id] || null;
+                const displayOwner = p.createdBy === "general" ? "IHSAs Union" : `${p.createdBy} Chamber`;
+                
+                const cardHtml = `
+                    <div class="bg-darknavy/30 border border-bangladesh/50 p-5 rounded-2xl flex flex-col justify-between hover:border-caribbean/60 transition duration-300 relative group">
+                        <div class="space-y-3">
+                            <div class="flex items-start justify-between gap-4">
+                                <span class="px-2.5 py-1 rounded-lg text-[9px] font-extrabold uppercase tracking-widest border ${themeBg} flex items-center gap-1.5">
+                                    <i class="${iconClass}"></i> ${p.category}
+                                </span>
+                                <div class="flex items-center space-x-2">
+                                    ${statusBadgeHtml}
+                                    <span class="bg-richblack/80 px-2 py-1 rounded text-[8px] text-brandwhite/50 border border-bangladesh/40 uppercase tracking-widest font-bold">
+                                        ${displayOwner}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="space-y-1">
+                                <h3 class="text-sm font-black text-white group-hover:text-glow transition uppercase tracking-wider">${p.title}</h3>
+                                <div class="flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-brandwhite/50 font-medium">
+                                    <span><i class="fa-regular fa-calendar-check mr-1 text-caribbean"></i> ${formatDate(p.date)}</span>
+                                    <span><i class="fa-solid fa-users-gear mr-1 text-caribbean"></i> ${p.coordinator}</span>
+                                </div>
+                            </div>
+                            <p class="text-xs text-brandwhite/75 leading-relaxed font-sans line-clamp-3">${p.description}</p>
+                            
+                            ${winnerBadgeHtml}
+
+                            <!-- Likes and dislikes section -->
+                            <div class="flex items-center space-x-4 border-t border-bangladesh/20 pt-3 mt-3 text-xs">
+                                <button onclick="handleVote('${p.id}', 'like')" class="flex items-center space-x-1.5 hover:text-emerald-400 transition text-brandwhite/60">
+                                    <i class="fa-thumbs-up ${userVote === 'like' ? 'fa-solid text-emerald-400' : 'fa-regular'} text-sm"></i>
+                                    <span class="${userVote === 'like' ? 'text-emerald-400 font-bold' : ''}">${p.likes || 0}</span>
+                                </button>
+                                <button onclick="handleVote('${p.id}', 'dislike')" class="flex items-center space-x-1.5 hover:text-rose-400 transition text-brandwhite/60">
+                                    <i class="fa-thumbs-down ${userVote === 'dislike' ? 'fa-solid text-rose-400' : 'fa-regular'} text-sm"></i>
+                                    <span class="${userVote === 'dislike' ? 'text-rose-400 font-bold' : ''}">${p.dislikes || 0}</span>
+                                </button>
+                            </div>
+
+                            ${approvalActionsHtml}
+                        </div>
+                        ${manageBtnHtml}
+                    </div>
+                `;
+                grid.insertAdjacentHTML('beforeend', cardHtml);
+            });
+            document.getElementById("itemCountLabel").textContent = `Showing ${filtered.length} Record${filtered.length === 1 ? '' : 's'}`;
+        }
+
+        // Handle Voting
+        function handleVote(programId, voteType) {
+            let activeVotes = JSON.parse(sessionStorage.getItem("ihsas_user_votes") || "{}");
+            const target = programs.find(p => p.id === programId);
+            if (!target) return;
+
+            target.likes = target.likes || 0;
+            target.dislikes = target.dislikes || 0;
+
+            const existingVote = activeVotes[programId];
+
+            if (existingVote === voteType) {
+                if (voteType === 'like') target.likes = Math.max(0, target.likes - 1);
+                else target.dislikes = Math.max(0, target.dislikes - 1);
+                delete activeVotes[programId];
+                showToast("Vote removed", true);
+            } else {
+                if (existingVote) {
+                    if (existingVote === 'like') target.likes = Math.max(0, target.likes - 1);
+                    else target.dislikes = Math.max(0, target.dislikes - 1);
+                }
+                if (voteType === 'like') target.likes++;
+                else target.dislikes++;
+                activeVotes[programId] = voteType;
+                showToast(`Voted ${voteType === 'like' ? 'Up' : 'Down'}!`, true);
+            }
+
+            sessionStorage.setItem("ihsas_user_votes", JSON.stringify(activeVotes));
+            saveProgramsToStorage();
+            renderPrograms();
+        }
+
+        function updateProgramStatus(id, newStatus) {
+            const index = programs.findIndex(p => p.id === id);
+            if (index !== -1) {
+                programs[index].status = newStatus;
+                saveProgramsToStorage();
+                showToast(`Program has been ${newStatus.toUpperCase()}!`, true);
+                renderPrograms();
+            }
+        }
+
+        function toggleProgramModal(show) {
+            const modal = document.getElementById("programModal");
+            const form = document.getElementById("programForm");
+
+            if (show) {
+                form.reset();
+                document.getElementById("editProgramId").value = "";
+                document.getElementById("modalTitleText").textContent = "Publish New Report";
+
+                document.getElementById("progDate").value = new Date().toISOString().substring(0, 10);
+                if (activeChamberUser) {
+                    document.getElementById("progCoordinator").value = `${activeChamberUser} Chamber Union`;
+                } else {
+                    document.getElementById("progCoordinator").value = "IHSAs Students Union";
+                }
+
+                modal.classList.remove("hidden");
+            } else {
+                modal.classList.add("hidden");
+            }
+        }
+
+        function editProgramRecord(id) {
+            const target = programs.find(p => p.id === id);
+            if (!target) return;
+
+            document.getElementById("editProgramId").value = target.id;
+            document.getElementById("modalTitleText").textContent = `Modify Report: ${target.title}`;
+            
+            document.getElementById("progTitle").value = target.title;
+            document.getElementById("progDate").value = target.date;
+            document.getElementById("progCategory").value = target.category;
+            document.getElementById("progCoordinator").value = target.coordinator;
+            document.getElementById("progDescription").value = target.description;
+
+            if (target.winners) {
+                document.getElementById("progWin1").value = target.winners.first || "";
+                document.getElementById("progWin2").value = target.winners.second || "";
+                document.getElementById("progWin3").value = target.winners.third || "";
+            } else {
+                document.getElementById("progWin1").value = "";
+                document.getElementById("progWin2").value = "";
+                document.getElementById("progWin3").value = "";
+            }
+
+            document.getElementById("programModal").classList.remove("hidden");
+        }
+
+        function submitProgramForm() {
+            const editId = document.getElementById("editProgramId").value;
+            const titleInput = document.getElementById("progTitle").value;
+            const dateInput = document.getElementById("progDate").value;
+            const categoryInput = document.getElementById("progCategory").value;
+            const coordInput = document.getElementById("progCoordinator").value;
+            const descInput = document.getElementById("progDescription").value;
+            const win1 = document.getElementById("progWin1").value.trim();
+            const win2 = document.getElementById("progWin2").value.trim();
+            const win3 = document.getElementById("progWin3").value.trim();
+            const winnersObj = (win1 || win2 || win3) ? { first: win1, second: win2, third: win3 } : null;
+            
+            if (editId) {
+                const index = programs.findIndex(p => p.id === editId);
+                if (index !== -1) {
+                    const originalAuthor = programs[index].createdBy;
+                    if (!isAdmin && originalAuthor !== activeChamberUser) {
+                        showToast("Edit permission denied.", false);
+                        return;
+                    }
+                    programs[index].title = titleInput;
+                    programs[index].date = dateInput;
+                    programs[index].category = categoryInput;
+                    programs[index].coordinator = coordInput;
+                    programs[index].description = descInput;
+                    programs[index].winners = winnersObj;
+                    showToast("Program report modified!", true);
+                }
+            } else {
+                const creatorTag = activeChamberUser || "general";
+                const newProgram = {
+                    id: "prog-" + Date.now(),
+                    title: titleInput,
+                    date: dateInput,
+                    category: categoryInput,
+                    coordinator: coordInput,
+                    createdBy: creatorTag,
+                    description: descInput,
+                    winners: winnersObj,
+                    likes: 0,
+                    dislikes: 0,
+                    status: (creatorTag === "general" || creatorTag === "IHSAs") ? "approved" : "pending"
+                };
+                programs.push(newProgram);
+                showToast(creatorTag === "general" ? "New general report published!" : "Event submitted to IHSAs for approval!", true);
+            }
+            saveProgramsToStorage();
+            toggleProgramModal(false);
+            updateSessionIndicatorsUI();
+            renderPrograms();
+        }
+
+        let currentConfirmResolve = null;
+
+        function triggerCustomConfirmModal(title, text) {
+            document.getElementById("confirmModalTitle").textContent = title;
+            document.getElementById("confirmModalText").textContent = text;
+            document.getElementById("confirmModal").classList.remove("hidden");
+
+            return new Promise((resolve) => {
+                currentConfirmResolve = resolve;
+            });
+        }
+
+        function dismissCustomConfirm(isConfirmed) {
+            document.getElementById("confirmModal").classList.add("hidden");
+            if (currentConfirmResolve) {
+                currentConfirmResolve(isConfirmed);
+                currentConfirmResolve = null;
+            }
+        }
+
+        async function triggerDeleteConfirm(id) {
+            deleteIdToProcess = id;
+            const confirmed = await triggerCustomConfirmModal(
+                "Delete Report", 
+                "Are you absolutely sure you want to permanently delete this program report? This database modification cannot be recovered."
+            );
+            if (confirmed && deleteIdToProcess) {
+                programs = programs.filter(p => p.id !== deleteIdToProcess);
+                saveProgramsToStorage();
+                showToast("Program report removed.", true);
+                updateSessionIndicatorsUI();
+                renderPrograms();
+            }
+            deleteIdToProcess = null;
+        }
+
+        async function triggerResetDatabaseConfirm() {
+            if (!isAdmin) return;
+            const confirmed = await triggerCustomConfirmModal(
+                "Reset Database", 
+                "Are you absolutely sure you want to reset the programs back to standard defaults? All custom program uploads will be cleared."
+            );
+            if (confirmed) {
+                localStorage.removeItem("ihsas_programs");
+                programs = [...DEFAULT_PROGRAMS];
+                saveProgramsToStorage();
+                showToast("System database restored to initial defaults.", true);
+                updateSessionIndicatorsUI();
+                renderPrograms();
+            }
+        }
+
+        // Global Toast Alert HUD
+        function showToast(msg, success = true) {
+            const toast = document.getElementById("toastNotification");
+            const icon = document.getElementById("toastIcon");
+            const label = document.getElementById("toastMsg");
+
+            label.textContent = msg;
+            if (success) {
+                icon.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+                icon.className = "text-emerald-400 text-sm";
+                toast.className = "fixed bottom-6 left-6 z-50 bg-darknavy border-2 border-emerald-500/50 text-brandwhite px-4 py-3 rounded-2xl flex items-center space-x-3 shadow-2xl transition duration-300 transform translate-y-0 opacity-100 pointer-events-auto";
+            } else {
+                icon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+                icon.className = "text-rose-400 text-sm";
+                toast.className = "fixed bottom-6 left-6 z-50 bg-darknavy border-2 border-rose-500/50 text-brandwhite px-4 py-3 rounded-2xl flex items-center space-x-3 shadow-2xl transition duration-300 transform translate-y-0 opacity-100 pointer-events-auto";
+            }
+
+            setTimeout(() => {
+                toast.className = "fixed bottom-6 left-6 z-50 bg-darknavy border-2 border-caribbean text-brandwhite px-4 py-3 rounded-2xl flex items-center space-x-3 shadow-2xl transition duration-300 transform translate-y-20 opacity-0 pointer-events-none";
+            }, 3000);
+        }
+
+        function formatDate(dateStr) {
+            try {
+                const date = new Date(dateStr);
+                return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            } catch(e) {
+                return dateStr;
+            }
+        }
+    </script>
+</body>
+</html>
